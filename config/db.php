@@ -5,9 +5,9 @@
  */
 
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'moto_lease_db');    // Your cPanel DB name
-define('DB_USER', 'root');             // Your cPanel DB username
-define('DB_PASS', '');                 // Your cPanel DB password
+define('DB_NAME', 'oneclick2trip_installment');  // cPanel DB name
+define('DB_USER', 'oneclick2trip_installment');  // cPanel DB username
+define('DB_PASS', 'Ha1994181@');                           // ← PASTE YOUR PASSWORD HERE
 define('DB_CHARSET', 'utf8mb4');
 
 // -------------------------------------------------------

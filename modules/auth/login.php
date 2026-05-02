@@ -5,6 +5,7 @@
 require_once __DIR__ . '/../../config/db.php';
 require_once __DIR__ . '/../../config/mail.php';
 require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../includes/functions.php';
 
 if (isLoggedIn()) { header('Location: ' . BASE_URL . '/dashboard.php'); exit; }
 
@@ -29,10 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_name'] = $user['name'];
             $_SESSION['user_role'] = $user['role'];
 
-            // Update last login
             $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?")->execute([$user['id']]);
 
-            // Log activity
             require_once __DIR__ . '/../../includes/functions.php';
             logActivity('Admin logged in', 'user', $user['id']);
 
@@ -46,87 +45,182 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 ?>
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login — <?= APP_NAME ?></title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="<?= BASE_URL ?>/assets/css/main.css">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  .particles { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
-  .particle { position: absolute; border-radius: 50%; background: rgba(108,99,255,0.12); animation: float linear infinite; }
-  @keyframes float {
-    0%   { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-    10%  { opacity: 1; }
-    90%  { opacity: 1; }
-    100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background: #060d1a;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 20px;
   }
-  .login-bg { position: fixed; inset: 0; background: radial-gradient(ellipse at 30% 50%, rgba(108,99,255,0.08) 0%, transparent 60%), radial-gradient(ellipse at 70% 20%, rgba(46,213,115,0.05) 0%, transparent 50%); }
+
+  .login-card {
+    background: #0d1b35;
+    border: 1px solid #1e3a5f;
+    border-radius: 20px;
+    padding: 44px 40px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+  }
+
+  .login-logo {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .login-logo .logo-icon {
+    font-size: 52px;
+    display: block;
+    margin-bottom: 10px;
+  }
+  .login-logo h1 {
+    font-size: 26px;
+    font-weight: 800;
+    color: #3b82f6;
+    margin-bottom: 4px;
+  }
+  .login-logo p {
+    color: #94a3b8;
+    font-size: 13px;
+  }
+
+  .flash-error {
+    background: rgba(255,71,87,0.15);
+    border: 1px solid rgba(255,71,87,0.4);
+    color: #ff4757;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #8892b0;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+  }
+
+  input[type="email"],
+  input[type="password"] {
+    display: block;
+    width: 100%;
+    background: #030810;
+    border: 1.5px solid #1e3a8a;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 14px;
+    color: #e2e8f0;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input[type="email"]:focus,
+  input[type="password"]:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+  }
+  input::placeholder { color: #475569; }
+
+  .forgot-row {
+    text-align: right;
+    margin-top: 6px;
+    margin-bottom: 28px;
+  }
+  .forgot-row a {
+    font-size: 12px;
+    color: #3b82f6;
+    text-decoration: none;
+  }
+  .forgot-row a:hover { text-decoration: underline; }
+
+  .btn-signin {
+    display: block;
+    width: 100%;
+    background: #1e3a8a;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 14px;
+    font-family: 'Poppins', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .btn-signin:hover {
+    background: #3b82f6;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(59,130,246,0.4);
+  }
+  .btn-signin:active { transform: translateY(0); }
+
+  .login-footer {
+    text-align: center;
+    margin-top: 28px;
+    font-size: 12px;
+    color: #4a5280;
+  }
 </style>
 </head>
 <body>
-<div class="login-bg"></div>
-<div class="particles" id="particles"></div>
+<div class="login-card">
+  <div class="login-logo">
+    <span class="logo-icon">🏍️</span>
+    <h1><?= APP_NAME ?></h1>
+    <p>Motorcycle Leasing Management Portal</p>
+  </div>
 
-<div class="login-page">
-  <div class="login-card fade-in">
-    <div class="login-logo">
-      <span class="logo-icon">🏍️</span>
-      <h1><?= APP_NAME ?></h1>
-      <p>Motorcycle Leasing Management Portal</p>
+  <?php if ($error): ?>
+    <div class="flash-error">❌ <?= e($error) ?></div>
+  <?php endif; ?>
+
+  <form method="POST" action="">
+    <?= csrfField() ?>
+
+    <div class="form-group">
+      <label for="email">Email Address</label>
+      <input type="email" id="email" name="email"
+             placeholder="admin@example.com"
+             value="<?= htmlspecialchars($_POST['email'] ?? '', ENT_QUOTES, 'UTF-8') ?>"
+             required autocomplete="email">
     </div>
 
-    <?php if ($error): ?>
-      <div class="flash flash-error">❌ <?= e($error) ?></div>
-      <br>
-    <?php endif; ?>
-
-    <form method="POST" action="">
-      <?= csrfField() ?>
-      <div class="form-group">
-        <label for="email">Email Address</label>
-        <input type="email" id="email" name="email" placeholder="admin@example.com"
-               value="<?= e($_POST['email'] ?? '') ?>" required autocomplete="email">
-      </div>
-      <div class="form-group" style="margin-top:16px">
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
-      </div>
-      <div style="margin-top:8px; text-align:right; margin-bottom:24px;">
-        <a href="<?= BASE_URL ?>/modules/auth/forgot_password.php" style="font-size:12px;color:var(--accent);text-decoration:none;">Forgot password?</a>
-      </div>
-      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:12px;">
-        🔐 Sign In
-      </button>
-    </form>
-
-    <div class="login-footer">
-      <p><?= APP_NAME ?> &copy; <?= date('Y') ?></p>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password"
+             placeholder="••••••••"
+             required autocomplete="current-password">
     </div>
+
+    <div class="forgot-row">
+      <a href="<?= BASE_URL ?>/modules/auth/forgot_password.php">Forgot password?</a>
+    </div>
+
+    <button type="submit" class="btn-signin">🔐 Sign In</button>
+  </form>
+
+  <div class="login-footer">
+    <p><?= APP_NAME ?> &copy; <?= date('Y') ?></p>
   </div>
 </div>
-
-<script>
-  // Apply saved theme
-  const t = localStorage.getItem('ml_theme') || 'dark';
-  document.documentElement.setAttribute('data-theme', t);
-
-  // Particles
-  const container = document.getElementById('particles');
-  for (let i = 0; i < 18; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    const size = Math.random() * 40 + 10;
-    p.style.cssText = `
-      width:${size}px; height:${size}px;
-      left:${Math.random()*100}%;
-      animation-duration:${Math.random()*12+8}s;
-      animation-delay:-${Math.random()*10}s;
-    `;
-    container.appendChild(p);
-  }
-</script>
 </body>
 </html>

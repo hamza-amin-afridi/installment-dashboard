@@ -9,11 +9,11 @@ START TRANSACTION;
 SET time_zone = "+05:00";
 
 -- Create database (update name as needed)
-CREATE DATABASE IF NOT EXISTS `moto_lease_db`
+CREATE DATABASE IF NOT EXISTS `oneclick2trip_installment`
   DEFAULT CHARACTER SET utf8mb4
   DEFAULT COLLATE utf8mb4_unicode_ci;
 
-USE `moto_lease_db`;
+USE `oneclick2trip_installment`;
 
 -- ============================================================
 -- Table: users (Admin accounts)
